@@ -57,6 +57,7 @@ public class FlappyDeath : MonoBehaviour
 
     public void ReloadScene()
     {
+        Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 }

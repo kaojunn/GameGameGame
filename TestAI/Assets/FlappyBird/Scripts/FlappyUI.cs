@@ -3,6 +3,7 @@ using UnityEngine;
 public class FlappyUI : MonoBehaviour
 {
     bool _show;
+    bool _paused;
     FlappyDeath _death;
     FlappyScoreManager _score;
 
@@ -15,6 +16,25 @@ public class FlappyUI : MonoBehaviour
     public void ShowGameOver()
     {
         _show = true;
+        SetPaused(false);
+    }
+
+    void TogglePause()
+    {
+        if (_show)
+            return;
+        SetPaused(!_paused);
+    }
+
+    void SetPaused(bool paused)
+    {
+        _paused = paused;
+        Time.timeScale = _paused ? 0f : 1f;
+    }
+
+    public static bool IsGameplayPaused()
+    {
+        return Time.timeScale <= 0f;
     }
 
     void OnGUI()
@@ -22,7 +42,16 @@ public class FlappyUI : MonoBehaviour
         const int w = 420;
         const int h = 132;
         var r = new Rect((Screen.width - w) * 0.5f, (Screen.height - h) * 0.5f, w, h);
-        GUI.Label(new Rect(12, 12, 500, 40), "Flappy：鼠标左键 / 空格 = 跳跃");
+        GUI.Label(new Rect(12, 12, 640, 40), "Flappy：鼠标左键 / 空格 = 跳跃；P / Esc = 暂停");
+
+        if (_paused && !_show)
+        {
+            GUI.Box(r, GUIContent.none);
+            GUI.Label(new Rect(r.x + 16, r.y + 14, w - 32, 40), "游戏已暂停");
+            if (GUI.Button(new Rect(r.x + 16, r.y + 68, w - 32, 40), "继续游戏 (P / Esc)"))
+                SetPaused(false);
+            return;
+        }
 
         if (!_show)
             return;
@@ -39,7 +68,15 @@ public class FlappyUI : MonoBehaviour
 
     void Update()
     {
+        if (Input.GetKeyDown(KeyCode.P) || Input.GetKeyDown(KeyCode.Escape))
+            TogglePause();
         if (_show && Input.GetKeyDown(KeyCode.R) && _death != null)
             _death.ReloadScene();
+    }
+
+    void OnDisable()
+    {
+        if (Time.timeScale <= 0f)
+            Time.timeScale = 1f;
     }
 }

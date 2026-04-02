@@ -30,6 +30,8 @@ public class BirdFlap : MonoBehaviour
     {
         if (_death != null && _death.IsDead)
             return;
+        if (FlappyUI.IsGameplayPaused())
+            return;
         if (Input.GetMouseButtonDown(0) || Input.GetKeyDown(KeyCode.Space))
         {
             _rb.AddForce(Vector3.up * jumpImpulse, ForceMode.Impulse);
