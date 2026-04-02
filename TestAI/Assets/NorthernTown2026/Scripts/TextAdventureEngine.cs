@@ -46,22 +46,28 @@ namespace NorthernTown2026
             OnStateChanged?.Invoke();
         }
 
-        public IReadOnlyList<ChoiceOption> GetChoicesForCurrentNode()
+        public IReadOnlyList<ChoiceView> GetChoiceViewsForCurrentNode()
         {
             if (!_nodes.TryGetValue(CurrentNodeId, out var node))
-                return Array.Empty<ChoiceOption>();
-            var list = new List<ChoiceOption>();
+                return Array.Empty<ChoiceView>();
+            var list = new List<ChoiceView>();
             foreach (var c in node.Choices)
             {
+                string reason = null;
                 if (!string.IsNullOrEmpty(c.RequiresItemId) && !_player.HasItem(c.RequiresItemId))
-                    continue;
-                if (c.RequiresInsightSum > 0)
+                    reason = $"需要物品：{c.RequiresItemId}";
+                if (reason == null && c.RequiresInsightSum > 0)
                 {
                     var sum = _player.GetStat(StatId.洞察) + _player.GetStat(StatId.机巧);
                     if (sum < c.RequiresInsightSum)
-                        continue;
+                        reason = $"需要洞察+机巧 ≥ {c.RequiresInsightSum}";
                 }
-                list.Add(c);
+                list.Add(new ChoiceView
+                {
+                    Option = c,
+                    IsAvailable = string.IsNullOrEmpty(reason),
+                    DisabledReason = reason
+                });
             }
             return list;
         }
@@ -70,6 +76,12 @@ namespace NorthernTown2026
         {
             if (choice == null)
                 return;
+            if (!IsChoiceAvailable(choice, out var disabledReason))
+            {
+                OnLog?.Invoke($"该选项当前不可用：{disabledReason}");
+                OnStateChanged?.Invoke();
+                return;
+            }
 
             _player.RunChoicesCount++;
 
@@ -112,6 +124,31 @@ namespace NorthernTown2026
 
             CurrentNodeId = nextId;
             EmitNode(nextId);
+        }
+
+        bool IsChoiceAvailable(ChoiceOption choice, out string reason)
+        {
+            reason = null;
+            if (choice == null)
+            {
+                reason = "选项不存在。";
+                return false;
+            }
+            if (!string.IsNullOrEmpty(choice.RequiresItemId) && !_player.HasItem(choice.RequiresItemId))
+            {
+                reason = $"需要物品：{choice.RequiresItemId}";
+                return false;
+            }
+            if (choice.RequiresInsightSum > 0)
+            {
+                var sum = _player.GetStat(StatId.洞察) + _player.GetStat(StatId.机巧);
+                if (sum < choice.RequiresInsightSum)
+                {
+                    reason = $"需要洞察+机巧 ≥ {choice.RequiresInsightSum}";
+                    return false;
+                }
+            }
+            return true;
         }
 
         public void ApplyEquipFromDrag(string itemId, string slotKey)

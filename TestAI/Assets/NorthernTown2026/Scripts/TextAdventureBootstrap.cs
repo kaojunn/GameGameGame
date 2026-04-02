@@ -348,20 +348,23 @@ namespace NorthernTown2026
             foreach (Transform c in _choicesRoot)
                 Destroy(c.gameObject);
 
-            foreach (var opt in _engine.GetChoicesForCurrentNode())
+            foreach (var view in _engine.GetChoiceViewsForCurrentNode())
             {
                 var btnGo = new GameObject("Choice");
                 btnGo.transform.SetParent(_choicesRoot, false);
                 var img = btnGo.AddComponent<Image>();
-                img.color = new Color(0.18f, 0.22f, 0.32f, 1f);
+                img.color = view.IsAvailable
+                    ? new Color(0.18f, 0.22f, 0.32f, 1f)
+                    : new Color(0.14f, 0.15f, 0.18f, 1f);
                 img.raycastTarget = true;
                 var btn = btnGo.AddComponent<Button>();
                 btn.targetGraphic = img;
+                btn.interactable = view.IsAvailable;
                 var rt = btnGo.GetComponent<RectTransform>();
                 rt.sizeDelta = new Vector2(0f, 48f);
                 var btnLe = btnGo.AddComponent<LayoutElement>();
-                btnLe.minHeight = 48f;
-                btnLe.preferredHeight = 48f;
+                btnLe.minHeight = view.IsAvailable ? 48f : 62f;
+                btnLe.preferredHeight = view.IsAvailable ? 48f : 62f;
                 btnLe.flexibleWidth = 1f;
 
                 var labelGo = new GameObject("Label");
@@ -378,11 +381,16 @@ namespace NorthernTown2026
                 t.alignment = TextAnchor.MiddleLeft;
                 t.horizontalOverflow = HorizontalWrapMode.Wrap;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
-                t.text = opt.Text;
+                t.text = view.IsAvailable
+                    ? view.Option.Text
+                    : $"{view.Option.Text}\n<size=14><color=#8D99AD>（未满足：{view.DisabledReason}）</color></size>";
                 t.raycastTarget = false;
 
-                var captured = opt;
-                btn.onClick.AddListener(() => _engine.Choose(captured));
+                if (view.IsAvailable)
+                {
+                    var captured = view.Option;
+                    btn.onClick.AddListener(() => _engine.Choose(captured));
+                }
             }
         }
 
