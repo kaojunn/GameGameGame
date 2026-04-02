@@ -5,6 +5,40 @@ namespace NorthernTown2026
     /// <summary>平行世界 2026 北方小镇 · 轻科幻分支剧情表。</summary>
     public static class NorthernTownStoryContent
     {
+        static readonly string[] EndingNodeIdOrder =
+        {
+            "ending_leave",
+            "ending_leave_soft",
+            "ending_public",
+            "ending_hidden",
+            "ending_arrest"
+        };
+
+        static readonly Dictionary<string, string> EndingDisplayNames = new Dictionary<string, string>
+        {
+            { "ending_leave", "北上的信标" },
+            { "ending_leave_soft", "雪落在缓存上" },
+            { "ending_public", "广场一分钟" },
+            { "ending_hidden", "备份的对话" },
+            { "ending_arrest", "热心市民" }
+        };
+
+        public static IReadOnlyList<string> EndingNodeIds => EndingNodeIdOrder;
+
+        public static bool IsEndingNode(string nodeId)
+        {
+            if (string.IsNullOrEmpty(nodeId))
+                return false;
+            return EndingDisplayNames.ContainsKey(nodeId);
+        }
+
+        public static string GetEndingDisplayName(string nodeId)
+        {
+            if (string.IsNullOrEmpty(nodeId))
+                return "未知结局";
+            return EndingDisplayNames.TryGetValue(nodeId, out var name) ? name : nodeId;
+        }
+
         public static Dictionary<string, StoryNode> BuildGraph()
         {
             var g = new Dictionary<string, StoryNode>();

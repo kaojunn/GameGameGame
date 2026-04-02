@@ -9,6 +9,8 @@ namespace NorthernTown2026
     [Serializable]
     public class PlayerState
     {
+        const string EndingPrefKeyPrefix = "NorthernTown2026.EndingUnlocked.";
+
         public int Level = 1;
         public int CurrentXp;
         public int 体魄 = 3;
@@ -18,6 +20,8 @@ namespace NorthernTown2026
 
         public readonly HashSet<string> InventoryItemIds = new HashSet<string>();
         public readonly Dictionary<string, string> EquippedBySlot = new Dictionary<string, string>();
+        public readonly HashSet<string> UnlockedEndingIds = new HashSet<string>();
+        bool _endingMetaLoaded;
 
         /// <summary>本局已展示的剧情节点次数（含起始节点；周目重置时清零）。</summary>
         public int RunNodesVisitedCount;
@@ -142,6 +146,34 @@ namespace NorthernTown2026
 
         public bool HasItem(string itemId) => !string.IsNullOrEmpty(itemId) && InventoryItemIds.Contains(itemId);
 
+        void EnsureEndingMetaLoaded()
+        {
+            if (_endingMetaLoaded)
+                return;
+            _endingMetaLoaded = true;
+            UnlockedEndingIds.Clear();
+            foreach (var endingId in NorthernTownStoryContent.EndingNodeIds)
+            {
+                if (PlayerPrefs.GetInt(EndingPrefKeyPrefix + endingId, 0) == 1)
+                    UnlockedEndingIds.Add(endingId);
+            }
+        }
+
+        /// <summary>收录结局（跨周目持久化）。返回 false 表示不是有效结局 ID。</summary>
+        public bool MarkEndingUnlocked(string endingNodeId, out bool isNewUnlock)
+        {
+            EnsureEndingMetaLoaded();
+            isNewUnlock = false;
+            if (!NorthernTownStoryContent.IsEndingNode(endingNodeId))
+                return false;
+            if (!UnlockedEndingIds.Add(endingNodeId))
+                return true;
+            isNewUnlock = true;
+            PlayerPrefs.SetInt(EndingPrefKeyPrefix + endingNodeId, 1);
+            PlayerPrefs.Save();
+            return true;
+        }
+
         /// <summary>消耗背包中的消耗品并结算经验（含升级）。</summary>
         public bool TryConsumeItem(string itemId, out string msg)
         {
@@ -185,6 +217,7 @@ namespace NorthernTown2026
 
         public void ResetForNewGame()
         {
+            EnsureEndingMetaLoaded();
             Level = 1;
             CurrentXp = 0;
             体魄 = 洞察 = 镇定 = 机巧 = 3;
@@ -197,9 +230,26 @@ namespace NorthernTown2026
 
         public string FormatStatusBlock()
         {
+            EnsureEndingMetaLoaded();
             var sb = new StringBuilder();
             sb.AppendLine($"Lv.{Level}  经验 {CurrentXp}/{XpRequiredForNextLevel()}");
             sb.AppendLine($"本局进度：已读节点 {RunNodesVisitedCount} · 已做选择 {RunChoicesCount}");
+            sb.AppendLine($"结局图鉴：{UnlockedEndingIds.Count}/{NorthernTownStoryContent.EndingNodeIds.Count}");
+            if (UnlockedEndingIds.Count > 0)
+            {
+                sb.Append("已收录：");
+                var first = true;
+                foreach (var endingId in NorthernTownStoryContent.EndingNodeIds)
+                {
+                    if (!UnlockedEndingIds.Contains(endingId))
+                        continue;
+                    if (!first)
+                        sb.Append('、');
+                    sb.Append(NorthernTownStoryContent.GetEndingDisplayName(endingId));
+                    first = false;
+                }
+                sb.AppendLine();
+            }
             sb.AppendLine($"体魄 {GetStat(StatId.体魄)}  洞察 {GetStat(StatId.洞察)}  镇定 {GetStat(StatId.镇定)}  机巧 {GetStat(StatId.机巧)}");
             sb.AppendLine("— 装备 —");
             foreach (var slot in new[] { "终端", "外套", "饰品" })

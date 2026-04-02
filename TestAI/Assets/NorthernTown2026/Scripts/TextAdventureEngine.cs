@@ -43,6 +43,13 @@ namespace NorthernTown2026
             sb.AppendLine($"—— {nodeId} ——");
             sb.AppendLine(node.Text.Trim());
             OnLog?.Invoke(sb.ToString());
+            if (_player.MarkEndingUnlocked(nodeId, out var isNewUnlock))
+            {
+                if (isNewUnlock)
+                    OnLog?.Invoke($"【结局图鉴】新收录：{NorthernTownStoryContent.GetEndingDisplayName(nodeId)}");
+                else
+                    OnLog?.Invoke($"【结局图鉴】已收录：{NorthernTownStoryContent.GetEndingDisplayName(nodeId)}");
+            }
             OnStateChanged?.Invoke();
         }
 
