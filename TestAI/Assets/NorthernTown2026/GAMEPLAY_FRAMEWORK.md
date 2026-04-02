@@ -25,11 +25,13 @@
 | 背包 | `InventoryItemIds`：字符串 ID 集合（**无堆叠数量**，同一 ID 至多出现一次语义上由集合保证）。 |
 | 装备 | `EquippedBySlot`：槽位名 → 物品 ID；物品仍在背包集合中，界面「未装备」列表会排除已占用同一物品的槽位展示。 |
 | 本局进度 | `RunNodesVisitedCount`：每次成功展示并记录一个剧情节点 +1；`RunChoicesCount`：每次执行一次选项 +1；`ResetForNewGame` 时清零。状态面板文本展示一行「已读节点 / 已做选择」。 |
+| 结局图鉴（Meta） | `UnlockedEndingIds`：跨周目保留的已解锁结局节点 ID 集合；首次进入结局节点时写入 PlayerPrefs，状态面板展示「结局图鉴：已解锁/总数」。 |
 
 **升级所需经验**（`XpToNextLevel`，下标为当前 `Level`）：  
 `80, 160, 260, 380, 520`（数组长度之外视为需 9999，用于封顶表现）。
 
-**新游戏 / 周目重置**：`ResetForNewGame()` 清空等级、经验、四维（回到初始）、背包与装备，并**发放开局消耗品**（当前：`item_bread`）。剧情中若选项将 `NextNodeId` 设为 `"start"`，引擎会再次调用 `ResetForNewGame()` 并触发 `OnNewRunStarted`。
+**新游戏 / 周目重置**：`ResetForNewGame()` 清空等级、经验、四维（回到初始）、背包与装备，并**发放开局消耗品**（当前：`item_bread`）。剧情中若选项将 `NextNodeId` 设为 `"start"`，引擎会再次调用 `ResetForNewGame()` 并触发 `OnNewRunStarted`。  
+**注意**：结局图鉴是 Meta，不会在 `ResetForNewGame()` 时清零；当前持久化键名为 `NorthernTown2026.Meta.UnlockedEndings`。
 
 ---
 

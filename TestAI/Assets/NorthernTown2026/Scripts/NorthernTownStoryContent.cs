@@ -5,6 +5,20 @@ namespace NorthernTown2026
     /// <summary>平行世界 2026 北方小镇 · 轻科幻分支剧情表。</summary>
     public static class NorthernTownStoryContent
     {
+        static readonly HashSet<string> EndingNodeIdSet = new HashSet<string>
+        {
+            "ending_leave",
+            "ending_leave_soft",
+            "ending_public",
+            "ending_hidden",
+            "ending_arrest"
+        };
+
+        public static IReadOnlyCollection<string> AllEndingNodeIds => EndingNodeIdSet;
+
+        public static bool IsEndingNodeId(string nodeId) =>
+            !string.IsNullOrEmpty(nodeId) && EndingNodeIdSet.Contains(nodeId);
+
         public static Dictionary<string, StoryNode> BuildGraph()
         {
             var g = new Dictionary<string, StoryNode>();
