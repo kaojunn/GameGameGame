@@ -1,0 +1,4 @@
+CC0 音频来源（Kenney，https://kenney.nl/）：
+- FlappyBGM.ogg：Music Jingles / 8-Bit jingles / jingles_NES02.ogg
+- FlappyHit.ogg：Impact Sounds / impactPlate_heavy_002.ogg
+- FlappyFlap.ogg：Impact Sounds / impactGlass_light_001.ogg
