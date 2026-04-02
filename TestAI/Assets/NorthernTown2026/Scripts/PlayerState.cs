@@ -200,6 +200,8 @@ namespace NorthernTown2026
             var sb = new StringBuilder();
             sb.AppendLine($"Lv.{Level}  经验 {CurrentXp}/{XpRequiredForNextLevel()}");
             sb.AppendLine($"本局进度：已读节点 {RunNodesVisitedCount} · 已做选择 {RunChoicesCount}");
+            sb.AppendLine(
+                $"关键线索：密钥碎片[{GetClueState("fragment_key")}] 旧手机[{GetClueState("gear_old_phone")}] 铜铃[{GetClueState("gear_charm")}]");
             sb.AppendLine($"体魄 {GetStat(StatId.体魄)}  洞察 {GetStat(StatId.洞察)}  镇定 {GetStat(StatId.镇定)}  机巧 {GetStat(StatId.机巧)}");
             sb.AppendLine("— 装备 —");
             foreach (var slot in new[] { "终端", "外套", "饰品" })
@@ -231,5 +233,7 @@ namespace NorthernTown2026
                 sb.AppendLine("（无）");
             return sb.ToString();
         }
+
+        string GetClueState(string itemId) => HasItem(itemId) ? "已获得" : "未获得";
     }
 }
