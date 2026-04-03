@@ -7,6 +7,22 @@ namespace NorthernTown2026
 {
     public class TextAdventureEngine
     {
+        public readonly struct ChoicePresentation
+        {
+            public ChoiceOption Choice { get; }
+            public bool IsAvailable { get; }
+            public string HintText { get; }
+            public string UnavailableReason { get; }
+
+            public ChoicePresentation(ChoiceOption choice, bool isAvailable, string hintText, string unavailableReason)
+            {
+                Choice = choice;
+                IsAvailable = isAvailable;
+                HintText = hintText;
+                UnavailableReason = unavailableReason;
+            }
+        }
+
         readonly Dictionary<string, StoryNode> _nodes;
         readonly PlayerState _player = new PlayerState();
         readonly System.Random _rng;
@@ -48,22 +64,64 @@ namespace NorthernTown2026
 
         public IReadOnlyList<ChoiceOption> GetChoicesForCurrentNode()
         {
-            if (!_nodes.TryGetValue(CurrentNodeId, out var node))
-                return Array.Empty<ChoiceOption>();
             var list = new List<ChoiceOption>();
-            foreach (var c in node.Choices)
+            foreach (var c in GetChoicePresentationsForCurrentNode())
             {
-                if (!string.IsNullOrEmpty(c.RequiresItemId) && !_player.HasItem(c.RequiresItemId))
-                    continue;
-                if (c.RequiresInsightSum > 0)
-                {
-                    var sum = _player.GetStat(StatId.洞察) + _player.GetStat(StatId.机巧);
-                    if (sum < c.RequiresInsightSum)
-                        continue;
-                }
-                list.Add(c);
+                if (c.IsAvailable && c.Choice != null)
+                    list.Add(c.Choice);
             }
             return list;
+        }
+
+        public IReadOnlyList<ChoicePresentation> GetChoicePresentationsForCurrentNode()
+        {
+            if (!_nodes.TryGetValue(CurrentNodeId, out var node))
+                return Array.Empty<ChoicePresentation>();
+
+            var list = new List<ChoicePresentation>();
+            foreach (var c in node.Choices)
+            {
+                var unavailableReason = BuildUnavailableReason(c);
+                list.Add(new ChoicePresentation(
+                    c,
+                    string.IsNullOrEmpty(unavailableReason),
+                    BuildChoiceHint(c),
+                    unavailableReason));
+            }
+            return list;
+        }
+
+        string BuildChoiceHint(ChoiceOption choice)
+        {
+            if (choice?.Check == null)
+                return null;
+            var statValue = _player.GetStat(choice.Check.Stat);
+            return $"检定提示：{choice.Check.Stat}+1d10 ≥ {choice.Check.Threshold}（当前属性 {statValue}）";
+        }
+
+        string BuildUnavailableReason(ChoiceOption choice)
+        {
+            if (choice == null)
+                return "无效选项。";
+
+            var reasons = new List<string>();
+
+            if (!string.IsNullOrEmpty(choice.RequiresItemId) && !_player.HasItem(choice.RequiresItemId))
+            {
+                var itemName = EquipmentCatalog.TryGet(choice.RequiresItemId, out var def)
+                    ? def.Name
+                    : choice.RequiresItemId;
+                reasons.Add($"需要物品：{itemName}");
+            }
+
+            if (choice.RequiresInsightSum > 0)
+            {
+                var sum = _player.GetStat(StatId.洞察) + _player.GetStat(StatId.机巧);
+                if (sum < choice.RequiresInsightSum)
+                    reasons.Add($"需要洞察+机巧 ≥ {choice.RequiresInsightSum}（当前 {sum}）");
+            }
+
+            return reasons.Count == 0 ? null : string.Join("；", reasons);
         }
 
         public void Choose(ChoiceOption choice)

@@ -348,20 +348,24 @@ namespace NorthernTown2026
             foreach (Transform c in _choicesRoot)
                 Destroy(c.gameObject);
 
-            foreach (var opt in _engine.GetChoicesForCurrentNode())
+            foreach (var presentation in _engine.GetChoicePresentationsForCurrentNode())
             {
+                var opt = presentation.Choice;
                 var btnGo = new GameObject("Choice");
                 btnGo.transform.SetParent(_choicesRoot, false);
                 var img = btnGo.AddComponent<Image>();
-                img.color = new Color(0.18f, 0.22f, 0.32f, 1f);
+                img.color = presentation.IsAvailable
+                    ? new Color(0.18f, 0.22f, 0.32f, 1f)
+                    : new Color(0.12f, 0.13f, 0.16f, 1f);
                 img.raycastTarget = true;
                 var btn = btnGo.AddComponent<Button>();
                 btn.targetGraphic = img;
+                btn.interactable = presentation.IsAvailable;
                 var rt = btnGo.GetComponent<RectTransform>();
-                rt.sizeDelta = new Vector2(0f, 48f);
+                rt.sizeDelta = new Vector2(0f, 52f);
                 var btnLe = btnGo.AddComponent<LayoutElement>();
-                btnLe.minHeight = 48f;
-                btnLe.preferredHeight = 48f;
+                btnLe.minHeight = 52f;
+                btnLe.preferredHeight = 52f;
                 btnLe.flexibleWidth = 1f;
 
                 var labelGo = new GameObject("Label");
@@ -369,21 +373,55 @@ namespace NorthernTown2026
                 var labelRt = labelGo.AddComponent<RectTransform>();
                 labelRt.anchorMin = Vector2.zero;
                 labelRt.anchorMax = Vector2.one;
-                labelRt.offsetMin = new Vector2(12f, 4f);
-                labelRt.offsetMax = new Vector2(-12f, -4f);
+                labelRt.offsetMin = new Vector2(12f, 12f);
+                labelRt.offsetMax = new Vector2(-12f, -20f);
                 var t = labelGo.AddComponent<Text>();
                 t.font = UiFont(20);
                 t.fontSize = 20;
-                t.color = new Color(0.92f, 0.94f, 0.98f);
+                t.color = presentation.IsAvailable
+                    ? new Color(0.92f, 0.94f, 0.98f)
+                    : new Color(0.55f, 0.58f, 0.64f);
                 t.alignment = TextAnchor.MiddleLeft;
                 t.horizontalOverflow = HorizontalWrapMode.Wrap;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
                 t.text = opt.Text;
                 t.raycastTarget = false;
 
-                var captured = opt;
-                btn.onClick.AddListener(() => _engine.Choose(captured));
+                var hint = BuildChoiceHintText(presentation);
+                if (!string.IsNullOrEmpty(hint))
+                {
+                    var hintGo = new GameObject("Hint");
+                    hintGo.transform.SetParent(btnGo.transform, false);
+                    var hintRt = hintGo.AddComponent<RectTransform>();
+                    hintRt.anchorMin = new Vector2(0f, 0f);
+                    hintRt.anchorMax = new Vector2(1f, 0f);
+                    hintRt.pivot = new Vector2(0.5f, 0f);
+                    hintRt.anchoredPosition = new Vector2(0f, 4f);
+                    hintRt.sizeDelta = new Vector2(0f, 18f);
+                    var ht = hintGo.AddComponent<Text>();
+                    ht.font = UiFont(13);
+                    ht.fontSize = 13;
+                    ht.color = presentation.IsAvailable
+                        ? new Color(0.65f, 0.76f, 0.9f)
+                        : new Color(0.76f, 0.58f, 0.58f);
+                    ht.alignment = TextAnchor.LowerLeft;
+                    ht.text = hint;
+                    ht.raycastTarget = false;
+                }
+
+                if (presentation.IsAvailable)
+                {
+                    var captured = opt;
+                    btn.onClick.AddListener(() => _engine.Choose(captured));
+                }
             }
+        }
+
+        static string BuildChoiceHintText(TextAdventureEngine.ChoicePresentation presentation)
+        {
+            if (!string.IsNullOrEmpty(presentation.UnavailableReason))
+                return presentation.UnavailableReason;
+            return presentation.HintText;
         }
 
         /// <summary>
