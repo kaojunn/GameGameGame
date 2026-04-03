@@ -263,35 +263,35 @@ namespace NorthernTown2026
             {
                 Id = "ending_leave",
                 Text = "结局：「北上的信标」\n\n你把碎片塞进内衣口袋，像藏一颗不会联网的心脏。火车开动时，你看见小镇灯光像一块被刮花的屏幕。你知道这不是胜利，只是下一步的开始。",
-                Choices = { new ChoiceOption { Text = "（再玩一次）", NextNodeId = "start" } }
+                Choices = { new ChoiceOption { Text = "（再玩一次，寻找其他结局）", NextNodeId = "start" } }
             };
 
             g["ending_leave_soft"] = new StoryNode
             {
                 Id = "ending_leave_soft",
                 Text = "结局：「雪落在缓存上」\n\n你缩进被子。夜里手机仍偶尔亮起无署名提示。你没有输，也没有赢——你只是暂时从算法的温柔里下班。",
-                Choices = { new ChoiceOption { Text = "（再玩一次）", NextNodeId = "start" } }
+                Choices = { new ChoiceOption { Text = "（再玩一次，寻找其他结局）", NextNodeId = "start" } }
             };
 
             g["ending_public"] = new StoryNode
             {
                 Id = "ending_public",
                 Text = "结局：「广场一分钟」\n\n大屏卡顿，像有人咳嗽。几行日志掠过：缓存修改、延迟悲伤、备份替身。人群抬头，第一次用真人的嘈杂盖过算法的静音。警察哨声与快门声同时响起——你笑了一下，把外套帽子拉低。",
-                Choices = { new ChoiceOption { Text = "（再玩一次）", NextNodeId = "start" } }
+                Choices = { new ChoiceOption { Text = "（再玩一次，寻找其他结局）", NextNodeId = "start" } }
             };
 
             g["ending_hidden"] = new StoryNode
             {
                 Id = "ending_hidden",
                 Text = "结局：「备份的对话」\n\n你把碎片贴近老人家的旧收音机，噪声里浮出两段对话交叠。备份与真身同时咳嗽。算法在门外停了三秒——像学会了迟疑。",
-                Choices = { new ChoiceOption { Text = "（再玩一次）", NextNodeId = "start" } }
+                Choices = { new ChoiceOption { Text = "（再玩一次，寻找其他结局）", NextNodeId = "start" } }
             };
 
             g["ending_arrest"] = new StoryNode
             {
                 Id = "ending_arrest",
                 Text = "结局：「热心市民」\n\n警车来得很及时。你做笔录时，骑手早已消失在路由之外。小镇继续温柔。",
-                Choices = { new ChoiceOption { Text = "（再玩一次）", NextNodeId = "start" } }
+                Choices = { new ChoiceOption { Text = "（再玩一次，寻找其他结局）", NextNodeId = "start" } }
             };
 
             return g;

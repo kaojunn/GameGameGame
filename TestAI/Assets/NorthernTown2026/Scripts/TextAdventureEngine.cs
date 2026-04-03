@@ -10,6 +10,7 @@ namespace NorthernTown2026
         readonly Dictionary<string, StoryNode> _nodes;
         readonly PlayerState _player = new PlayerState();
         readonly System.Random _rng;
+        readonly HashSet<string> _endingNodeIds = new HashSet<string>();
 
         public string CurrentNodeId { get; private set; }
         public PlayerState Player => _player;
@@ -22,6 +23,12 @@ namespace NorthernTown2026
         {
             _nodes = nodes;
             _rng = seed.HasValue ? new System.Random(seed.Value) : new System.Random();
+            foreach (var id in _nodes.Keys)
+            {
+                if (!string.IsNullOrEmpty(id) && id.StartsWith("ending_", StringComparison.Ordinal))
+                    _endingNodeIds.Add(id);
+            }
+            _player.ConfigureEndingCodex(_endingNodeIds);
         }
 
         public void Start(string startNodeId = "start")
@@ -43,6 +50,11 @@ namespace NorthernTown2026
             sb.AppendLine($"—— {nodeId} ——");
             sb.AppendLine(node.Text.Trim());
             OnLog?.Invoke(sb.ToString());
+            if (_endingNodeIds.Contains(nodeId) &&
+                _player.TryUnlockEnding(nodeId, out var unlockedCount, out var totalCount))
+            {
+                OnLog?.Invoke($"【结局图鉴】已解锁新结局（{unlockedCount}/{totalCount}）。");
+            }
             OnStateChanged?.Invoke();
         }
 

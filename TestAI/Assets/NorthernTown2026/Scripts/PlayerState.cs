@@ -9,6 +9,8 @@ namespace NorthernTown2026
     [Serializable]
     public class PlayerState
     {
+        const string EndingPrefsPrefix = "NorthernTown2026.EndingUnlocked.";
+
         public int Level = 1;
         public int CurrentXp;
         public int 体魄 = 3;
@@ -25,7 +27,46 @@ namespace NorthernTown2026
         /// <summary>本局已执行的选项次数（周目重置时清零）。</summary>
         public int RunChoicesCount;
 
+        readonly HashSet<string> _endingCodexUnlocked = new HashSet<string>();
+        int _endingCodexTotal;
+
         static readonly int[] XpToNextLevel = { 0, 80, 160, 260, 380, 520 };
+
+        static string EndingPrefKey(string endingNodeId) => EndingPrefsPrefix + endingNodeId;
+
+        /// <summary>
+        /// 从剧情节点列表初始化结局图鉴（跨周目、跨会话持久化）。
+        /// </summary>
+        public void ConfigureEndingCodex(IEnumerable<string> endingNodeIds)
+        {
+            _endingCodexUnlocked.Clear();
+            _endingCodexTotal = 0;
+            if (endingNodeIds == null)
+                return;
+            foreach (var id in endingNodeIds)
+            {
+                if (string.IsNullOrEmpty(id))
+                    continue;
+                _endingCodexTotal++;
+                if (PlayerPrefs.GetInt(EndingPrefKey(id), 0) == 1)
+                    _endingCodexUnlocked.Add(id);
+            }
+        }
+
+        public bool TryUnlockEnding(string endingNodeId, out int unlockedCount, out int totalCount)
+        {
+            unlockedCount = _endingCodexUnlocked.Count;
+            totalCount = _endingCodexTotal;
+            if (string.IsNullOrEmpty(endingNodeId))
+                return false;
+            if (!_endingCodexUnlocked.Add(endingNodeId))
+                return false;
+            PlayerPrefs.SetInt(EndingPrefKey(endingNodeId), 1);
+            PlayerPrefs.Save();
+            unlockedCount = _endingCodexUnlocked.Count;
+            totalCount = _endingCodexTotal;
+            return true;
+        }
 
         public int GetStat(StatId id)
         {
@@ -200,6 +241,8 @@ namespace NorthernTown2026
             var sb = new StringBuilder();
             sb.AppendLine($"Lv.{Level}  经验 {CurrentXp}/{XpRequiredForNextLevel()}");
             sb.AppendLine($"本局进度：已读节点 {RunNodesVisitedCount} · 已做选择 {RunChoicesCount}");
+            if (_endingCodexTotal > 0)
+                sb.AppendLine($"结局图鉴：{_endingCodexUnlocked.Count}/{_endingCodexTotal}（跨周目）");
             sb.AppendLine($"体魄 {GetStat(StatId.体魄)}  洞察 {GetStat(StatId.洞察)}  镇定 {GetStat(StatId.镇定)}  机巧 {GetStat(StatId.机巧)}");
             sb.AppendLine("— 装备 —");
             foreach (var slot in new[] { "终端", "外套", "饰品" })
