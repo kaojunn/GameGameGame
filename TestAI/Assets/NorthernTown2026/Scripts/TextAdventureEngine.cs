@@ -10,6 +10,10 @@ namespace NorthernTown2026
         readonly Dictionary<string, StoryNode> _nodes;
         readonly PlayerState _player = new PlayerState();
         readonly System.Random _rng;
+        readonly HashSet<string> _endingNodeIds = new HashSet<string>();
+        readonly Dictionary<string, int> _endingReachCounts = new Dictionary<string, int>();
+
+        const string EndingPrefPrefix = "NorthernTown2026.EndingReachCount.";
 
         public string CurrentNodeId { get; private set; }
         public PlayerState Player => _player;
@@ -22,6 +26,66 @@ namespace NorthernTown2026
         {
             _nodes = nodes;
             _rng = seed.HasValue ? new System.Random(seed.Value) : new System.Random();
+            InitializeEndingMeta();
+        }
+
+        void InitializeEndingMeta()
+        {
+            _endingNodeIds.Clear();
+            _endingReachCounts.Clear();
+            foreach (var kv in _nodes)
+            {
+                if (!IsEndingNodeId(kv.Key))
+                    continue;
+                _endingNodeIds.Add(kv.Key);
+                var count = PlayerPrefs.GetInt(EndingPrefPrefix + kv.Key, 0);
+                if (count > 0)
+                    _endingReachCounts[kv.Key] = count;
+            }
+        }
+
+        static bool IsEndingNodeId(string nodeId) =>
+            !string.IsNullOrEmpty(nodeId) && nodeId.StartsWith("ending_");
+
+        string EndingDisplayName(string endingId)
+        {
+            if (_nodes.TryGetValue(endingId, out var node) && !string.IsNullOrEmpty(node.Text))
+            {
+                var firstLine = node.Text.Split('\n')[0].Trim();
+                if (!string.IsNullOrEmpty(firstLine))
+                    return firstLine.Replace("结局：", string.Empty).Trim();
+            }
+            return endingId;
+        }
+
+        bool RecordEndingReached(string endingId, out int reachCount)
+        {
+            reachCount = 0;
+            if (!_endingNodeIds.Contains(endingId))
+                return false;
+            _endingReachCounts.TryGetValue(endingId, out var previous);
+            reachCount = previous + 1;
+            _endingReachCounts[endingId] = reachCount;
+            PlayerPrefs.SetInt(EndingPrefPrefix + endingId, reachCount);
+            PlayerPrefs.Save();
+            return previous == 0;
+        }
+
+        public string FormatMetaProgressBlock()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine("— 结局图鉴（跨周目）—");
+            sb.AppendLine($"已解锁 {_endingReachCounts.Count}/{_endingNodeIds.Count}");
+            var ids = new List<string>(_endingNodeIds);
+            ids.Sort(StringComparer.Ordinal);
+            foreach (var id in ids)
+            {
+                if (_endingReachCounts.TryGetValue(id, out var count))
+                    sb.AppendLine($"· {EndingDisplayName(id)}（达成 {count} 次）");
+                else
+                    sb.AppendLine("· ？？？（未解锁）");
+            }
+            return sb.ToString();
         }
 
         public void Start(string startNodeId = "start")
@@ -96,6 +160,15 @@ namespace NorthernTown2026
             }
             else
                 nextId = choice.NextNodeId;
+
+            if (IsEndingNodeId(nextId))
+            {
+                var firstUnlock = RecordEndingReached(nextId, out var reachCount);
+                if (firstUnlock)
+                    OnLog?.Invoke($"【结局图鉴】解锁：{EndingDisplayName(nextId)}（{_endingReachCounts.Count}/{_endingNodeIds.Count}）");
+                else
+                    OnLog?.Invoke($"【结局图鉴】{EndingDisplayName(nextId)} 已达成 {reachCount} 次。");
+            }
 
             if (string.IsNullOrEmpty(nextId))
             {

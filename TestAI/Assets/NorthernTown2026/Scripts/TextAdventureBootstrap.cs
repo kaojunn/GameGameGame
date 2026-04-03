@@ -95,7 +95,7 @@ namespace NorthernTown2026
         {
             if (_engine == null || _statsText == null)
                 return;
-            _statsText.text = _engine.Player.FormatStatusBlock();
+            _statsText.text = _engine.Player.FormatStatusBlock() + "\n" + _engine.FormatMetaProgressBlock();
             RebuildEquipmentCards();
             RebuildChoiceButtons();
         }
