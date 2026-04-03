@@ -43,6 +43,9 @@ namespace NorthernTown2026
             sb.AppendLine($"—— {nodeId} ——");
             sb.AppendLine(node.Text.Trim());
             OnLog?.Invoke(sb.ToString());
+            _player.TryUnlockEnding(nodeId, out var endingMsg);
+            if (!string.IsNullOrEmpty(endingMsg))
+                OnLog?.Invoke(endingMsg);
             OnStateChanged?.Invoke();
         }
 

@@ -25,11 +25,13 @@
 | 背包 | `InventoryItemIds`：字符串 ID 集合（**无堆叠数量**，同一 ID 至多出现一次语义上由集合保证）。 |
 | 装备 | `EquippedBySlot`：槽位名 → 物品 ID；物品仍在背包集合中，界面「未装备」列表会排除已占用同一物品的槽位展示。 |
 | 本局进度 | `RunNodesVisitedCount`：每次成功展示并记录一个剧情节点 +1；`RunChoicesCount`：每次执行一次选项 +1；`ResetForNewGame` 时清零。状态面板文本展示一行「已读节点 / 已做选择」。 |
+| 结局图鉴（跨周目） | 追踪 `ending_leave / ending_leave_soft / ending_public / ending_hidden / ending_arrest` 五个结局节点。进入结局节点时自动解锁；已解锁状态持久化到 `PlayerPrefs`，新周目保留。 |
 
 **升级所需经验**（`XpToNextLevel`，下标为当前 `Level`）：  
 `80, 160, 260, 380, 520`（数组长度之外视为需 9999，用于封顶表现）。
 
-**新游戏 / 周目重置**：`ResetForNewGame()` 清空等级、经验、四维（回到初始）、背包与装备，并**发放开局消耗品**（当前：`item_bread`）。剧情中若选项将 `NextNodeId` 设为 `"start"`，引擎会再次调用 `ResetForNewGame()` 并触发 `OnNewRunStarted`。
+**新游戏 / 周目重置**：`ResetForNewGame()` 清空等级、经验、四维（回到初始）、背包与装备，并**发放开局消耗品**（当前：`item_bread`）。剧情中若选项将 `NextNodeId` 设为 `"start"`，引擎会再次调用 `ResetForNewGame()` 并触发 `OnNewRunStarted`。  
+注：结局图鉴不随周目重置，会从 `PlayerPrefs` 读取并继续累积。
 
 ---
 
@@ -56,6 +58,7 @@
 4. **无检定**：走 `NextNodeId`。
 5. **结束**：`NextNodeId` 为空时记「剧终」，不跳转。
 6. **跳转 `start`**：在更新 `CurrentNodeId` 之前执行 `ResetForNewGame()`（新周目）。
+7. **结局解锁**：每次 `EmitNode(nodeId)` 成功后，若 `nodeId` 属于追踪结局 ID 列表，则写入结局图鉴并提示日志。
 
 **选项可见性**（过滤，不满足则不显示）：
 
@@ -66,7 +69,7 @@
 
 ## 5. UI 与拖放（运行时生成）
 
-右侧面板大致自上而下：**状态文本 → 装备槽（三格）→ 使用区（消耗品）→ 背包网格**。独立 **DragLayer** 用于拖动中置顶显示。
+右侧面板大致自上而下：**状态文本（含结局图鉴）→ 装备槽（三格）→ 使用区（消耗品）→ 背包网格**。独立 **DragLayer** 用于拖动中置顶显示。
 
 **拖放判定顺序**（`HandleEquipmentCardDrop`）：
 
