@@ -378,7 +378,7 @@ namespace NorthernTown2026
                 t.alignment = TextAnchor.MiddleLeft;
                 t.horizontalOverflow = HorizontalWrapMode.Wrap;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
-                t.text = opt.Text;
+                t.text = _engine.FormatChoiceLabel(opt);
                 t.raycastTarget = false;
 
                 var captured = opt;

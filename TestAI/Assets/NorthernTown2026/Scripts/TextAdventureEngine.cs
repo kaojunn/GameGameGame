@@ -66,6 +66,26 @@ namespace NorthernTown2026
             return list;
         }
 
+        public string FormatChoiceLabel(ChoiceOption choice)
+        {
+            if (choice == null)
+                return string.Empty;
+            if (choice.Check == null)
+                return choice.Text;
+
+            int stat = _player.GetStat(choice.Check.Stat);
+            int ratePercent = ComputeCheckSuccessRatePercent(stat, choice.Check.Threshold);
+            return $"{choice.Text}  【当前成功率 {ratePercent}%】";
+        }
+
+        static int ComputeCheckSuccessRatePercent(int statValue, int threshold)
+        {
+            int neededRoll = threshold - statValue;
+            int successFaces = 11 - neededRoll;
+            successFaces = Mathf.Clamp(successFaces, 0, 10);
+            return successFaces * 10;
+        }
+
         public void Choose(ChoiceOption choice)
         {
             if (choice == null)

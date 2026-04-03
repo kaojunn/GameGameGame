@@ -52,7 +52,8 @@
 2. **发放经验**：`GrantXp` → `GrantXp`；若升级，先记录升级提示再记录「获得经验 +n」类日志。
 3. **检定**（若 `Check != null`）：  
    - 总值 = `GetStat(检定的 StatId)` + **1～10 随机整数**；  
-   - 与 `Threshold` 比较，成功走 `SuccessNodeId`，失败走 `FailNodeId`。
+   - 与 `Threshold` 比较，成功走 `SuccessNodeId`，失败走 `FailNodeId`。  
+   - 选项按钮会基于当前有效属性显示**即时成功率提示**（`当前成功率 xx%`，按 1d10 等概率估算）。
 4. **无检定**：走 `NextNodeId`。
 5. **结束**：`NextNodeId` 为空时记「剧终」，不跳转。
 6. **跳转 `start`**：在更新 `CurrentNodeId` 之前执行 `ResetForNewGame()`（新周目）。
@@ -66,7 +67,7 @@
 
 ## 5. UI 与拖放（运行时生成）
 
-右侧面板大致自上而下：**状态文本 → 装备槽（三格）→ 使用区（消耗品）→ 背包网格**。独立 **DragLayer** 用于拖动中置顶显示。
+右侧面板大致自上而下：**状态文本 → 装备槽（三格）→ 使用区（消耗品）→ 背包网格**。独立 **DragLayer** 用于拖动中置顶显示。底部选项区会在检定类选项上附加成功率提示文本，便于玩家在点击前评估风险。
 
 **拖放判定顺序**（`HandleEquipmentCardDrop`）：
 
