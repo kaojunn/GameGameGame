@@ -348,15 +348,19 @@ namespace NorthernTown2026
             foreach (Transform c in _choicesRoot)
                 Destroy(c.gameObject);
 
-            foreach (var opt in _engine.GetChoicesForCurrentNode())
+            foreach (var view in _engine.GetChoicesForCurrentNode())
             {
+                var opt = view.Option;
                 var btnGo = new GameObject("Choice");
                 btnGo.transform.SetParent(_choicesRoot, false);
                 var img = btnGo.AddComponent<Image>();
-                img.color = new Color(0.18f, 0.22f, 0.32f, 1f);
+                img.color = view.IsAvailable
+                    ? new Color(0.18f, 0.22f, 0.32f, 1f)
+                    : new Color(0.14f, 0.14f, 0.16f, 1f);
                 img.raycastTarget = true;
                 var btn = btnGo.AddComponent<Button>();
                 btn.targetGraphic = img;
+                btn.interactable = view.IsAvailable;
                 var rt = btnGo.GetComponent<RectTransform>();
                 rt.sizeDelta = new Vector2(0f, 48f);
                 var btnLe = btnGo.AddComponent<LayoutElement>();
@@ -374,11 +378,15 @@ namespace NorthernTown2026
                 var t = labelGo.AddComponent<Text>();
                 t.font = UiFont(20);
                 t.fontSize = 20;
-                t.color = new Color(0.92f, 0.94f, 0.98f);
+                t.color = view.IsAvailable
+                    ? new Color(0.92f, 0.94f, 0.98f)
+                    : new Color(0.62f, 0.64f, 0.68f);
                 t.alignment = TextAnchor.MiddleLeft;
                 t.horizontalOverflow = HorizontalWrapMode.Wrap;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
-                t.text = opt.Text;
+                t.text = view.IsAvailable
+                    ? opt.Text
+                    : $"{opt.Text}\n（未满足：{view.LockedReason}）";
                 t.raycastTarget = false;
 
                 var captured = opt;

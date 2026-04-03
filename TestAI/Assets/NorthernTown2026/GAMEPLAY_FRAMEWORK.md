@@ -57,10 +57,10 @@
 5. **结束**：`NextNodeId` 为空时记「剧终」，不跳转。
 6. **跳转 `start`**：在更新 `CurrentNodeId` 之前执行 `ResetForNewGame()`（新周目）。
 
-**选项可见性**（过滤，不满足则不显示）：
+**选项可见性**（全部显示；不满足条件时置灰并展示原因）：
 
-- `RequiresItemId`：玩家背包需包含该 ID。
-- `RequiresInsightSum`：`洞察 + 机巧` 的有效值之和需 ≥ 该值。
+- `RequiresItemId`：玩家背包需包含该 ID；否则按钮不可点击，并显示「需要物品：xxx」。
+- `RequiresInsightSum`：`洞察 + 机巧` 的有效值之和需 ≥ 该值；否则按钮不可点击，并显示当前值提示。
 
 ---
 

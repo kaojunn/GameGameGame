@@ -25,6 +25,15 @@ namespace NorthernTown2026
     }
 
     [Serializable]
+    public class ChoicePresentation
+    {
+        public ChoiceOption Option;
+        public bool IsAvailable;
+        public string LockedReason;
+    }
+    
+
+    [Serializable]
     public class StoryNode
     {
         public string Id;

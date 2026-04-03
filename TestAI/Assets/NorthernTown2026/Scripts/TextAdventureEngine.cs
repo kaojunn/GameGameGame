@@ -46,30 +46,63 @@ namespace NorthernTown2026
             OnStateChanged?.Invoke();
         }
 
-        public IReadOnlyList<ChoiceOption> GetChoicesForCurrentNode()
+        public IReadOnlyList<ChoicePresentation> GetChoicesForCurrentNode()
         {
             if (!_nodes.TryGetValue(CurrentNodeId, out var node))
-                return Array.Empty<ChoiceOption>();
-            var list = new List<ChoiceOption>();
+                return Array.Empty<ChoicePresentation>();
+            var list = new List<ChoicePresentation>();
             foreach (var c in node.Choices)
             {
-                if (!string.IsNullOrEmpty(c.RequiresItemId) && !_player.HasItem(c.RequiresItemId))
-                    continue;
-                if (c.RequiresInsightSum > 0)
-                {
-                    var sum = _player.GetStat(StatId.洞察) + _player.GetStat(StatId.机巧);
-                    if (sum < c.RequiresInsightSum)
-                        continue;
-                }
-                list.Add(c);
+                list.Add(BuildChoicePresentation(c));
             }
             return list;
+        }
+
+        ChoicePresentation BuildChoicePresentation(ChoiceOption option)
+        {
+            var p = new ChoicePresentation
+            {
+                Option = option,
+                IsAvailable = true,
+                LockedReason = string.Empty
+            };
+            if (option == null)
+            {
+                p.IsAvailable = false;
+                p.LockedReason = "选项无效。";
+                return p;
+            }
+            if (!string.IsNullOrEmpty(option.RequiresItemId) && !_player.HasItem(option.RequiresItemId))
+            {
+                p.IsAvailable = false;
+                p.LockedReason = $"需要物品：{option.RequiresItemId}";
+                return p;
+            }
+            if (option.RequiresInsightSum > 0)
+            {
+                var sum = _player.GetStat(StatId.洞察) + _player.GetStat(StatId.机巧);
+                if (sum < option.RequiresInsightSum)
+                {
+                    p.IsAvailable = false;
+                    p.LockedReason = $"需要洞察+机巧 ≥ {option.RequiresInsightSum}（当前 {sum}）";
+                    return p;
+                }
+            }
+            return p;
         }
 
         public void Choose(ChoiceOption choice)
         {
             if (choice == null)
                 return;
+
+            var presentation = BuildChoicePresentation(choice);
+            if (!presentation.IsAvailable)
+            {
+                OnLog?.Invoke($"该选项当前不可用：{presentation.LockedReason}");
+                OnStateChanged?.Invoke();
+                return;
+            }
 
             _player.RunChoicesCount++;
 
