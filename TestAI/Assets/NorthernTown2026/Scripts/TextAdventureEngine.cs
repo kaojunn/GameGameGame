@@ -39,6 +39,8 @@ namespace NorthernTown2026
                 return;
             }
             _player.RunNodesVisitedCount++;
+            if (_player.TryUnlockEnding(nodeId, out var unlockMsg) && !string.IsNullOrEmpty(unlockMsg))
+                OnLog?.Invoke(unlockMsg);
             var sb = new StringBuilder();
             sb.AppendLine($"—— {nodeId} ——");
             sb.AppendLine(node.Text.Trim());

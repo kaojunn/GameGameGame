@@ -25,6 +25,7 @@
 | 背包 | `InventoryItemIds`：字符串 ID 集合（**无堆叠数量**，同一 ID 至多出现一次语义上由集合保证）。 |
 | 装备 | `EquippedBySlot`：槽位名 → 物品 ID；物品仍在背包集合中，界面「未装备」列表会排除已占用同一物品的槽位展示。 |
 | 本局进度 | `RunNodesVisitedCount`：每次成功展示并记录一个剧情节点 +1；`RunChoicesCount`：每次执行一次选项 +1；`ResetForNewGame` 时清零。状态面板文本展示一行「已读节点 / 已做选择」。 |
+| 结局图鉴（跨周目） | 首次进入受追踪的 `ending_*` 节点会解锁图鉴项，并持久化到 `PlayerPrefs`（键名前缀：`NorthernTown2026.EndingUnlocked.`）。周目重置不会清空该图鉴。 |
 
 **升级所需经验**（`XpToNextLevel`，下标为当前 `Level`）：  
 `80, 160, 260, 380, 520`（数组长度之外视为需 9999，用于封顶表现）。
