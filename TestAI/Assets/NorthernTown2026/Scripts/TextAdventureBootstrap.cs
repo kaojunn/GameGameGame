@@ -384,13 +384,17 @@ namespace NorthernTown2026
                 t.alignment = TextAnchor.MiddleLeft;
                 t.horizontalOverflow = HorizontalWrapMode.Wrap;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
+                var text = opt != null ? opt.Text : "（无效选项）";
                 t.text = view.IsAvailable
-                    ? opt.Text
-                    : $"{opt.Text}\n（未满足：{view.LockedReason}）";
+                    ? text
+                    : $"{text}\n（未满足：{view.LockedReason}）";
                 t.raycastTarget = false;
 
-                var captured = opt;
-                btn.onClick.AddListener(() => _engine.Choose(captured));
+                if (view.IsAvailable && opt != null)
+                {
+                    var captured = opt;
+                    btn.onClick.AddListener(() => _engine.Choose(captured));
+                }
             }
         }
 
