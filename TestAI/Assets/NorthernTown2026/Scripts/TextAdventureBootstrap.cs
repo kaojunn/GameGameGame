@@ -350,6 +350,7 @@ namespace NorthernTown2026
 
             foreach (var opt in _engine.GetChoicesForCurrentNode())
             {
+                var choiceHeight = opt.Check != null ? 78f : 48f;
                 var btnGo = new GameObject("Choice");
                 btnGo.transform.SetParent(_choicesRoot, false);
                 var img = btnGo.AddComponent<Image>();
@@ -358,10 +359,10 @@ namespace NorthernTown2026
                 var btn = btnGo.AddComponent<Button>();
                 btn.targetGraphic = img;
                 var rt = btnGo.GetComponent<RectTransform>();
-                rt.sizeDelta = new Vector2(0f, 48f);
+                rt.sizeDelta = new Vector2(0f, choiceHeight);
                 var btnLe = btnGo.AddComponent<LayoutElement>();
-                btnLe.minHeight = 48f;
-                btnLe.preferredHeight = 48f;
+                btnLe.minHeight = choiceHeight;
+                btnLe.preferredHeight = choiceHeight;
                 btnLe.flexibleWidth = 1f;
 
                 var labelGo = new GameObject("Label");
@@ -378,12 +379,32 @@ namespace NorthernTown2026
                 t.alignment = TextAnchor.MiddleLeft;
                 t.horizontalOverflow = HorizontalWrapMode.Wrap;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
-                t.text = opt.Text;
+                t.supportRichText = true;
+                t.text = BuildChoiceLabel(opt);
                 t.raycastTarget = false;
 
                 var captured = opt;
                 btn.onClick.AddListener(() => _engine.Choose(captured));
             }
+        }
+
+        string BuildChoiceLabel(ChoiceOption opt)
+        {
+            if (opt == null)
+                return string.Empty;
+            if (opt.Check == null || _engine == null)
+                return opt.Text;
+
+            var statValue = _engine.Player.GetStat(opt.Check.Stat);
+            var successCount = 0;
+            for (var roll = 1; roll <= 10; roll++)
+            {
+                if (statValue + roll >= opt.Check.Threshold)
+                    successCount++;
+            }
+            var successPercent = successCount * 10;
+            return
+                $"{opt.Text}\n<size=14><color=#8EA9C9>检定：{opt.Check.Stat} {statValue}+1d10 ≥ {opt.Check.Threshold}（成功率 {successPercent}%）</color></size>";
         }
 
         /// <summary>
