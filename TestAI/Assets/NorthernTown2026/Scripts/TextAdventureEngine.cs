@@ -33,8 +33,20 @@ namespace NorthernTown2026
 
         public void Start(string startNodeId = "start")
         {
+            StartNewRun(startNodeId, notifyNewRun: false);
+        }
+
+        public void RestartRun(string startNodeId = "start")
+        {
+            StartNewRun(startNodeId, notifyNewRun: true);
+        }
+
+        void StartNewRun(string startNodeId, bool notifyNewRun)
+        {
             _player.ResetForNewGame();
             CurrentNodeId = startNodeId;
+            if (notifyNewRun)
+                OnNewRunStarted?.Invoke();
             EmitNode(startNodeId);
         }
 
@@ -118,8 +130,8 @@ namespace NorthernTown2026
 
             if (nextId == "start")
             {
-                _player.ResetForNewGame();
-                OnNewRunStarted?.Invoke();
+                RestartRun("start");
+                return;
             }
 
             CurrentNodeId = nextId;

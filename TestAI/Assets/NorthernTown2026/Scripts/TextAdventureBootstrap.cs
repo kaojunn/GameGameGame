@@ -18,6 +18,7 @@ namespace NorthernTown2026
         RectTransform _inventoryZoneRt;
         RectTransform _consumableUseRt;
         RectTransform _dragLayer;
+        Button _restartButton;
         readonly Dictionary<string, Transform> _slotCardParents = new Dictionary<string, Transform>();
         readonly Dictionary<string, RectTransform> _slotHitRects = new Dictionary<string, RectTransform>();
 
@@ -42,6 +43,21 @@ namespace NorthernTown2026
             _engine.OnLog -= AppendLog;
             _engine.OnStateChanged -= RefreshAll;
             _engine.OnNewRunStarted -= ClearLog;
+        }
+
+        void Update()
+        {
+            if (_engine == null)
+                return;
+            if (Input.GetKeyDown(KeyCode.R))
+                RequestRestartRun();
+        }
+
+        void RequestRestartRun()
+        {
+            if (_engine == null)
+                return;
+            _engine.RestartRun();
         }
 
         void ClearLog()
@@ -457,6 +473,7 @@ namespace NorthernTown2026
 
             BuildLogPanel(topRow.transform);
             BuildStatsPanel(topRow.transform);
+            BuildRestartButton(canvasGo.transform);
 
             var dragGo = new GameObject("DragLayer");
             dragGo.transform.SetParent(canvasGo.transform, false);
@@ -469,6 +486,41 @@ namespace NorthernTown2026
             dragCv.overrideSorting = true;
             dragCv.sortingOrder = 300;
             dragGo.AddComponent<GraphicRaycaster>();
+        }
+
+        void BuildRestartButton(Transform parent)
+        {
+            var go = new GameObject("RestartRunButton");
+            go.transform.SetParent(parent, false);
+            var rt = go.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1f, 1f);
+            rt.anchorMax = new Vector2(1f, 1f);
+            rt.pivot = new Vector2(1f, 1f);
+            rt.anchoredPosition = new Vector2(-24f, -24f);
+            rt.sizeDelta = new Vector2(196f, 46f);
+
+            var img = go.AddComponent<Image>();
+            img.color = new Color(0.2f, 0.23f, 0.34f, 0.98f);
+            img.raycastTarget = true;
+
+            _restartButton = go.AddComponent<Button>();
+            _restartButton.targetGraphic = img;
+            _restartButton.onClick.AddListener(RequestRestartRun);
+
+            var textGo = new GameObject("Label");
+            textGo.transform.SetParent(go.transform, false);
+            var textRt = textGo.AddComponent<RectTransform>();
+            textRt.anchorMin = Vector2.zero;
+            textRt.anchorMax = Vector2.one;
+            textRt.offsetMin = new Vector2(10f, 0f);
+            textRt.offsetMax = new Vector2(-10f, 0f);
+            var t = textGo.AddComponent<Text>();
+            t.font = UiFont(16);
+            t.fontSize = 16;
+            t.color = new Color(0.92f, 0.94f, 0.98f);
+            t.alignment = TextAnchor.MiddleCenter;
+            t.text = "重新开始本局 (R)";
+            t.raycastTarget = false;
         }
 
         void BuildLogPanel(Transform parent)

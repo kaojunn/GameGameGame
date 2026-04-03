@@ -9,8 +9,10 @@
 - **图结构**：由若干 `StoryNode`（`Id`、`Text`、`Choices`）组成的有向图；引擎维护 `CurrentNodeId`，展示当前节点文本与可用选项。
 - **推进方式**：玩家从当前节点的 `ChoiceOption` 中选择一项，引擎按规则结算后跳转到下一节点或结束。
 - **日志**：节点文本与系统消息（检定、获得物品/经验、装备变更等）写入叙事区，状态面板与选项按钮随 `OnStateChanged` 刷新。
+- **快速重开**：支持直接重置本局并回到起点（默认 `start`），用于短局重试与多结局复盘。
 
 **入口**：`TextAdventureEngine.Start(startNodeId)` 会先执行 `PlayerState.ResetForNewGame()`，再进入起始节点（默认 `"start"`）。
+`TextAdventureEngine.RestartRun(startNodeId)` 会触发 `OnNewRunStarted`（用于清理日志等 UI）后重开本局。
 
 ---
 
@@ -67,7 +69,7 @@
 
 ## 5. UI 与拖放（运行时生成）
 
-右侧面板大致自上而下：**状态文本 → 装备槽（三格）→ 使用区（消耗品）→ 背包网格**。独立 **DragLayer** 用于拖动中置顶显示。
+右侧面板大致自上而下：**状态文本 → 装备槽（三格）→ 使用区（消耗品）→ 背包网格**。画面右上角提供**重新开始本局**按钮，键盘也支持 `R` 快捷重开。独立 **DragLayer** 用于拖动中置顶显示。
 
 **拖放判定顺序**（`HandleEquipmentCardDrop`）：
 
