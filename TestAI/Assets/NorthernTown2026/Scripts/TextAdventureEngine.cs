@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using UnityEngine;
 
 namespace NorthernTown2026
 {
@@ -39,6 +38,8 @@ namespace NorthernTown2026
                 return;
             }
             _player.RunNodesVisitedCount++;
+            if (_player.TryUnlockEndingByNodeId(nodeId, out var unlockMsg) && !string.IsNullOrEmpty(unlockMsg))
+                OnLog?.Invoke(unlockMsg);
             var sb = new StringBuilder();
             sb.AppendLine($"—— {nodeId} ——");
             sb.AppendLine(node.Text.Trim());

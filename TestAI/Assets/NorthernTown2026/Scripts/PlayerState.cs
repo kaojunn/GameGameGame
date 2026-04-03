@@ -9,6 +9,25 @@ namespace NorthernTown2026
     [Serializable]
     public class PlayerState
     {
+        const string EndingUnlockKeyPrefix = "NorthernTown2026.EndingUnlocked.";
+        static readonly string[] TrackedEndingIds =
+        {
+            "ending_leave",
+            "ending_leave_soft",
+            "ending_public",
+            "ending_hidden",
+            "ending_arrest"
+        };
+
+        static readonly Dictionary<string, string> EndingDisplayNames = new Dictionary<string, string>
+        {
+            { "ending_leave", "北上的信标" },
+            { "ending_leave_soft", "雪落在缓存上" },
+            { "ending_public", "广场一分钟" },
+            { "ending_hidden", "备份的对话" },
+            { "ending_arrest", "热心市民" }
+        };
+
         public int Level = 1;
         public int CurrentXp;
         public int 体魄 = 3;
@@ -18,6 +37,7 @@ namespace NorthernTown2026
 
         public readonly HashSet<string> InventoryItemIds = new HashSet<string>();
         public readonly Dictionary<string, string> EquippedBySlot = new Dictionary<string, string>();
+        readonly HashSet<string> _unlockedEndingIds = new HashSet<string>();
 
         /// <summary>本局已展示的剧情节点次数（含起始节点；周目重置时清零）。</summary>
         public int RunNodesVisitedCount;
@@ -26,6 +46,50 @@ namespace NorthernTown2026
         public int RunChoicesCount;
 
         static readonly int[] XpToNextLevel = { 0, 80, 160, 260, 380, 520 };
+
+        static string EndingName(string endingId) =>
+            EndingDisplayNames.TryGetValue(endingId, out var name) ? name : endingId;
+
+        static bool IsTrackedEnding(string nodeId)
+        {
+            foreach (var id in TrackedEndingIds)
+            {
+                if (id == nodeId)
+                    return true;
+            }
+            return false;
+        }
+
+        void LoadUnlockedEndingsFromPrefs()
+        {
+            _unlockedEndingIds.Clear();
+            foreach (var id in TrackedEndingIds)
+            {
+                var key = EndingUnlockKeyPrefix + id;
+                if (PlayerPrefs.GetInt(key, 0) == 1)
+                    _unlockedEndingIds.Add(id);
+            }
+        }
+
+        static void SaveEndingUnlockedToPrefs(string id)
+        {
+            PlayerPrefs.SetInt(EndingUnlockKeyPrefix + id, 1);
+            PlayerPrefs.Save();
+        }
+
+        public bool TryUnlockEndingByNodeId(string nodeId, out string message)
+        {
+            message = null;
+            if (!IsTrackedEnding(nodeId))
+                return false;
+            if (_unlockedEndingIds.Contains(nodeId))
+                return false;
+
+            _unlockedEndingIds.Add(nodeId);
+            SaveEndingUnlockedToPrefs(nodeId);
+            message = $"【结局图鉴】新解锁：{EndingName(nodeId)}（{_unlockedEndingIds.Count}/{TrackedEndingIds.Length}）";
+            return true;
+        }
 
         public int GetStat(StatId id)
         {
@@ -192,6 +256,7 @@ namespace NorthernTown2026
             EquippedBySlot.Clear();
             RunNodesVisitedCount = 0;
             RunChoicesCount = 0;
+            LoadUnlockedEndingsFromPrefs();
             AddItem("item_bread");
         }
 
@@ -200,6 +265,12 @@ namespace NorthernTown2026
             var sb = new StringBuilder();
             sb.AppendLine($"Lv.{Level}  经验 {CurrentXp}/{XpRequiredForNextLevel()}");
             sb.AppendLine($"本局进度：已读节点 {RunNodesVisitedCount} · 已做选择 {RunChoicesCount}");
+            sb.AppendLine($"结局图鉴：{_unlockedEndingIds.Count}/{TrackedEndingIds.Length}");
+            foreach (var endingId in TrackedEndingIds)
+            {
+                var unlocked = _unlockedEndingIds.Contains(endingId) ? "已解锁" : "未解锁";
+                sb.AppendLine($"· {EndingName(endingId)}：{unlocked}");
+            }
             sb.AppendLine($"体魄 {GetStat(StatId.体魄)}  洞察 {GetStat(StatId.洞察)}  镇定 {GetStat(StatId.镇定)}  机巧 {GetStat(StatId.机巧)}");
             sb.AppendLine("— 装备 —");
             foreach (var slot in new[] { "终端", "外套", "饰品" })
