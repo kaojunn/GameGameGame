@@ -378,12 +378,31 @@ namespace NorthernTown2026
                 t.alignment = TextAnchor.MiddleLeft;
                 t.horizontalOverflow = HorizontalWrapMode.Wrap;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
-                t.text = opt.Text;
+                t.text = FormatChoiceLabel(opt);
                 t.raycastTarget = false;
 
                 var captured = opt;
                 btn.onClick.AddListener(() => _engine.Choose(captured));
             }
+        }
+
+        string FormatChoiceLabel(ChoiceOption option)
+        {
+            if (option == null)
+                return string.Empty;
+            if (option.Check == null || _engine == null)
+                return option.Text;
+
+            var stat = _engine.Player.GetStat(option.Check.Stat);
+            var chance = ComputeCheckSuccessChancePercent(stat, option.Check.Threshold);
+            return $"{option.Text}（成功率 {chance}%）";
+        }
+
+        static int ComputeCheckSuccessChancePercent(int stat, int threshold)
+        {
+            var minRoll = threshold - stat;
+            var successFaces = Mathf.Clamp(11 - minRoll, 0, 10);
+            return successFaces * 10;
         }
 
         /// <summary>
