@@ -48,28 +48,75 @@ namespace NorthernTown2026
 
         public IReadOnlyList<ChoiceOption> GetChoicesForCurrentNode()
         {
-            if (!_nodes.TryGetValue(CurrentNodeId, out var node))
-                return Array.Empty<ChoiceOption>();
             var list = new List<ChoiceOption>();
-            foreach (var c in node.Choices)
+            foreach (var v in GetChoiceViewsForCurrentNode())
             {
-                if (!string.IsNullOrEmpty(c.RequiresItemId) && !_player.HasItem(c.RequiresItemId))
-                    continue;
-                if (c.RequiresInsightSum > 0)
-                {
-                    var sum = _player.GetStat(StatId.洞察) + _player.GetStat(StatId.机巧);
-                    if (sum < c.RequiresInsightSum)
-                        continue;
-                }
-                list.Add(c);
+                if (v.CanChoose && v.Option != null)
+                    list.Add(v.Option);
             }
             return list;
+        }
+
+        public IReadOnlyList<ChoiceView> GetChoiceViewsForCurrentNode()
+        {
+            if (!_nodes.TryGetValue(CurrentNodeId, out var node))
+                return Array.Empty<ChoiceView>();
+            var list = new List<ChoiceView>();
+            foreach (var c in node.Choices)
+            {
+                var canChoose = EvaluateChoiceAvailability(c, out var lockedHint);
+                list.Add(new ChoiceView
+                {
+                    Option = c,
+                    CanChoose = canChoose,
+                    LockedHint = lockedHint
+                });
+            }
+            return list;
+        }
+
+        bool EvaluateChoiceAvailability(ChoiceOption choice, out string lockedHint)
+        {
+            lockedHint = null;
+            if (choice == null)
+            {
+                lockedHint = "选项无效。";
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(choice.RequiresItemId) && !_player.HasItem(choice.RequiresItemId))
+            {
+                var itemLabel = choice.RequiresItemId;
+                if (EquipmentCatalog.TryGet(choice.RequiresItemId, out var def))
+                    itemLabel = def.Name;
+                lockedHint = $"需要物品：{itemLabel}";
+                return false;
+            }
+
+            if (choice.RequiresInsightSum > 0)
+            {
+                var sum = _player.GetStat(StatId.洞察) + _player.GetStat(StatId.机巧);
+                if (sum < choice.RequiresInsightSum)
+                {
+                    lockedHint = $"需要洞察+机巧 ≥ {choice.RequiresInsightSum}（当前 {sum}）";
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         public void Choose(ChoiceOption choice)
         {
             if (choice == null)
                 return;
+
+            if (!EvaluateChoiceAvailability(choice, out var lockedHint))
+            {
+                OnLog?.Invoke($"【条件不足】{lockedHint ?? "当前无法选择该项。"}");
+                OnStateChanged?.Invoke();
+                return;
+            }
 
             _player.RunChoicesCount++;
 

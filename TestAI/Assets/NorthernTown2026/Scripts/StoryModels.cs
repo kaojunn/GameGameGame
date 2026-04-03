@@ -3,6 +3,13 @@ using System.Collections.Generic;
 
 namespace NorthernTown2026
 {
+    public class ChoiceView
+    {
+        public ChoiceOption Option;
+        public bool CanChoose;
+        public string LockedHint;
+    }
+
     [Serializable]
     public class StatCheck
     {

@@ -348,21 +348,28 @@ namespace NorthernTown2026
             foreach (Transform c in _choicesRoot)
                 Destroy(c.gameObject);
 
-            foreach (var opt in _engine.GetChoicesForCurrentNode())
+            foreach (var view in _engine.GetChoiceViewsForCurrentNode())
             {
+                var opt = view.Option;
+                if (opt == null)
+                    continue;
+                var locked = !view.CanChoose;
                 var btnGo = new GameObject("Choice");
                 btnGo.transform.SetParent(_choicesRoot, false);
                 var img = btnGo.AddComponent<Image>();
-                img.color = new Color(0.18f, 0.22f, 0.32f, 1f);
+                img.color = locked
+                    ? new Color(0.12f, 0.12f, 0.15f, 1f)
+                    : new Color(0.18f, 0.22f, 0.32f, 1f);
                 img.raycastTarget = true;
                 var btn = btnGo.AddComponent<Button>();
                 btn.targetGraphic = img;
                 var rt = btnGo.GetComponent<RectTransform>();
-                rt.sizeDelta = new Vector2(0f, 48f);
+                rt.sizeDelta = new Vector2(0f, locked ? 72f : 54f);
                 var btnLe = btnGo.AddComponent<LayoutElement>();
-                btnLe.minHeight = 48f;
-                btnLe.preferredHeight = 48f;
+                btnLe.minHeight = locked ? 72f : 54f;
+                btnLe.preferredHeight = locked ? 72f : 54f;
                 btnLe.flexibleWidth = 1f;
+                btn.interactable = !locked;
 
                 var labelGo = new GameObject("Label");
                 labelGo.transform.SetParent(btnGo.transform, false);
@@ -374,15 +381,23 @@ namespace NorthernTown2026
                 var t = labelGo.AddComponent<Text>();
                 t.font = UiFont(20);
                 t.fontSize = 20;
-                t.color = new Color(0.92f, 0.94f, 0.98f);
+                t.color = locked
+                    ? new Color(0.72f, 0.74f, 0.78f)
+                    : new Color(0.92f, 0.94f, 0.98f);
                 t.alignment = TextAnchor.MiddleLeft;
                 t.horizontalOverflow = HorizontalWrapMode.Wrap;
                 t.verticalOverflow = VerticalWrapMode.Overflow;
-                t.text = opt.Text;
+                t.supportRichText = true;
+                t.text = locked && !string.IsNullOrEmpty(view.LockedHint)
+                    ? $"{opt.Text}\n<size=16><color=#9EA6B3>{view.LockedHint}</color></size>"
+                    : opt.Text;
                 t.raycastTarget = false;
 
-                var captured = opt;
-                btn.onClick.AddListener(() => _engine.Choose(captured));
+                if (!locked)
+                {
+                    var captured = opt;
+                    btn.onClick.AddListener(() => _engine.Choose(captured));
+                }
             }
         }
 
