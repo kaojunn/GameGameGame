@@ -31,6 +31,15 @@ namespace NorthernTown2026
             EmitNode(startNodeId);
         }
 
+        /// <summary>无论当前节点，立即重开到指定起始节点（默认 start）。</summary>
+        public void RestartRun(string startNodeId = "start")
+        {
+            _player.ResetForNewGame();
+            OnNewRunStarted?.Invoke();
+            CurrentNodeId = startNodeId;
+            EmitNode(startNodeId);
+        }
+
         void EmitNode(string nodeId)
         {
             if (!_nodes.TryGetValue(nodeId, out var node))
@@ -106,8 +115,8 @@ namespace NorthernTown2026
 
             if (nextId == "start")
             {
-                _player.ResetForNewGame();
-                OnNewRunStarted?.Invoke();
+                RestartRun("start");
+                return;
             }
 
             CurrentNodeId = nextId;

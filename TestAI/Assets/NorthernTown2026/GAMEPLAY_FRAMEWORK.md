@@ -9,8 +9,10 @@
 - **图结构**：由若干 `StoryNode`（`Id`、`Text`、`Choices`）组成的有向图；引擎维护 `CurrentNodeId`，展示当前节点文本与可用选项。
 - **推进方式**：玩家从当前节点的 `ChoiceOption` 中选择一项，引擎按规则结算后跳转到下一节点或结束。
 - **日志**：节点文本与系统消息（检定、获得物品/经验、装备变更等）写入叙事区，状态面板与选项按钮随 `OnStateChanged` 刷新。
+- **手动重开**：引擎提供 `RestartRun(startNodeId)`；UI 右栏有「重新开局」按钮，点击后立即重置本局并进入起始节点。
 
-**入口**：`TextAdventureEngine.Start(startNodeId)` 会先执行 `PlayerState.ResetForNewGame()`，再进入起始节点（默认 `"start"`）。
+**入口**：`TextAdventureEngine.Start(startNodeId)` 会先执行 `PlayerState.ResetForNewGame()`，再进入起始节点（默认 `"start"`）。  
+**重开事件**：`RestartRun` 与剧情跳转到 `"start"` 一样会触发 `OnNewRunStarted`，用于清空叙事区后再展示新开局节点。
 
 ---
 

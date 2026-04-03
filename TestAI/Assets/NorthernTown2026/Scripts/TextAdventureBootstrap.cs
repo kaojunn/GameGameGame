@@ -100,6 +100,13 @@ namespace NorthernTown2026
             RebuildChoiceButtons();
         }
 
+        void RestartCurrentRunFromButton()
+        {
+            if (_engine == null)
+                return;
+            _engine.RestartRun();
+        }
+
         public void HandleEquipmentCardDrop(DraggableEquipmentCard card, PointerEventData eventData)
         {
             if (_engine == null || card == null)
@@ -620,6 +627,33 @@ namespace NorthernTown2026
             titleT.alignment = TextAnchor.UpperLeft;
             titleT.text = "状态 · 装备";
             titleT.raycastTarget = false;
+
+            var restartBtnGo = new GameObject("RestartRunButton");
+            restartBtnGo.transform.SetParent(inner.transform, false);
+            var restartBtnLe = restartBtnGo.AddComponent<LayoutElement>();
+            restartBtnLe.preferredHeight = 42f;
+            restartBtnLe.flexibleHeight = 0f;
+            var restartBtnBg = restartBtnGo.AddComponent<Image>();
+            restartBtnBg.color = new Color(0.25f, 0.2f, 0.14f, 1f);
+            restartBtnBg.raycastTarget = true;
+            var restartBtn = restartBtnGo.AddComponent<Button>();
+            restartBtn.targetGraphic = restartBtnBg;
+            restartBtn.onClick.AddListener(RestartCurrentRunFromButton);
+
+            var restartLabelGo = new GameObject("Label");
+            restartLabelGo.transform.SetParent(restartBtnGo.transform, false);
+            var restartLabelRt = restartLabelGo.AddComponent<RectTransform>();
+            restartLabelRt.anchorMin = Vector2.zero;
+            restartLabelRt.anchorMax = Vector2.one;
+            restartLabelRt.offsetMin = new Vector2(8f, 4f);
+            restartLabelRt.offsetMax = new Vector2(-8f, -4f);
+            var restartLabel = restartLabelGo.AddComponent<Text>();
+            restartLabel.font = UiFont(16);
+            restartLabel.fontSize = 16;
+            restartLabel.color = new Color(0.98f, 0.93f, 0.82f);
+            restartLabel.alignment = TextAnchor.MiddleCenter;
+            restartLabel.text = "重新开局";
+            restartLabel.raycastTarget = false;
 
             var statsGo = new GameObject("Stats");
             statsGo.transform.SetParent(inner.transform, false);
